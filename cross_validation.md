@@ -91,3 +91,35 @@ train_df %>%
 ```
 
 ![](cross_validation_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
+
+``` r
+train_df %>% 
+  gather_predictions(linear_mod, smooth_mod, wiggly_mod) %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = x, y = y)) + 
+  geom_point() + 
+  geom_line(aes(y = pred), color = "red") + 
+  facet_wrap(~model)
+```
+
+![](cross_validation_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+Calculate root mean square error where larger values are worse
+
+``` r
+rmse(linear_mod, test_df)
+```
+
+    ## [1] 0.2805514
+
+``` r
+rmse(smooth_mod, test_df)
+```
+
+    ## [1] 0.2221774
+
+``` r
+rmse(wiggly_mod, test_df)
+```
+
+    ## [1] 0.289051
