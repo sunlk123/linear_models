@@ -96,6 +96,7 @@ train_df %>%
 train_df %>% 
   gather_predictions(linear_mod, smooth_mod, wiggly_mod) %>% 
   mutate(model = fct_inorder(model)) %>% 
+  
   ggplot(aes(x = x, y = y)) + 
   geom_point() + 
   geom_line(aes(y = pred), color = "red") + 
@@ -123,3 +124,16 @@ rmse(wiggly_mod, test_df)
 ```
 
     ## [1] 0.289051
+
+We are interested in the model that will do better on the test dataset.
+The training dataset is the one where you put in too much stuff. Putting
+more stuff into the training dataset makes the rmse decrease.
+
+## Do this all using modelr
+
+crossv\_mc generates test-training pairs for cross-validation
+
+``` r
+cv_df = 
+  crossv_mc(nonlin_df, 100) 
+```
