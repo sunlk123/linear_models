@@ -8,6 +8,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(p8105.datasets)
+library(modelr)
 
 set.seed(1)
 ```
@@ -97,5 +98,69 @@ bootstrap_results =
   ) %>%
   select(-strap_sample, -models) %>%
   unnest(results)
+```
+
+Summarize these results
+
+```{r}
+bootstrap_results %>%
+  group_by(term) %>%
+  summarize(se = sd(estimate))
+```
+
+
+## Try the modelr package
+
+```{r}
+boot_straps = 
+  sim_df_nonconst %>%
+  modelr::bootstrap(1000)
+```
+
+Copy and paste from website
+
+```{r}
+sim_df_nonconst %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~lm(y ~ x, data = .x) ),
+    results = map(models, broom::tidy)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  group_by(term) %>% 
+  summarize(boot_se = sd(estimate))
+```
+
+## What is your assumptions aren't wrong?
+
+```{r}
+sim_df_const %>%
+  lm(y ~x, data = .) %>%
+  broom::tidy()
+
+sim_df_const %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~lm(y ~ x, data = .x) ),
+    results = map(models, broom::tidy)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  group_by(term) %>% 
+  summarize(boot_se = sd(estimate))
+```
+
+## Using airbnb data
+
+```{r}
+data("nyc_airbnb")
+
+nyc_airbnb = 
+  nyc_airbnb %>% 
+  mutate(stars = review_scores_location / 2) %>% 
+  rename(
+    boro = neighbourhood_group,
+    neighborhood = neighbourhood) %>% 
+  filter(boro != "Staten Island") %>% 
+  select(price, stars, boro, neighborhood, room_type)
 ```
 
