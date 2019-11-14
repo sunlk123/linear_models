@@ -42,3 +42,60 @@ sim_df %>%
   facet_grid(~data_source) 
 ```
 
+Fit two models...
+
+```{r}
+sim_df_const %>%
+  lm(y ~x, data = .) %>%
+  broom::tidy()
+
+sim_df_nonconst %>%
+  lm(y ~x, data = .)  %>%
+  broom::tidy()
+```
+
+## Drawing one bootstrap sample
+
+Write a function to draw a boostrap sample based on a dataframe 
+
+```{r}
+sim_df_nonconst %>%
+  sample_frac(size = 1, replace = TRUE) %>%
+  arrange(x)
+```
+
+```{r}
+boot_sample = function(df) {
+  sample_frac(df, size = 1, replace = TRUE)
+}
+```
+
+```{r}
+boot_sample(sim_df_nonconst) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point(alpha = .5)
+```
+
+Organize a dataframe 
+
+```{r}
+boot_straps = 
+  tibble(
+    strap_num = 1:1000, 
+    strap_sample = rerun(1000, boot_sample(df = sim_df_nonconst))
+  )
+```
+
+Do some kind of analysis...
+
+```{r}
+bootstrap_results = 
+  boot_straps %>%
+  mutate(
+    models = map(strap_sample, ~lm(y ~x, data = .x)), 
+    results = map(models, broom::tidy)
+  ) %>%
+  select(-strap_sample, -models) %>%
+  unnest(results)
+```
+
